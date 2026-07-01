@@ -1,0 +1,54 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  isActive     Boolean  @default(true) @map("is_active")
+  isDelete     Boolean  @default(false) @map("is_delete")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  notes        Note[]
+
+  @@map("users")
+}
+
+model Note {
+  id             String     @id @default(uuid())
+  title          String
+  content        String     @db.Text
+  shareToken     String     @unique @map("share_token")
+  shareType      ShareType  @map("share_type")
+  accessType     AccessType @map("access_type")
+  hashedPassword String?    @map("hashed_password")
+  expiryAt       DateTime?  @map("expiry_at")
+  isRevoked      Boolean    @default(false) @map("is_revoked")
+  isUsed         Boolean    @default(false) @map("is_used")
+  viewCount      Int        @default(0) @map("view_count")
+  isActive       Boolean    @default(true) @map("is_active")
+  isDelete       Boolean    @default(false) @map("is_delete")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  ownerId        String     @map("owner_id")
+  owner          User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}
+
+enum ShareType {
+  ONE_TIME
+  TIME_BASED
+}
+
+enum AccessType {
+  PUBLIC
+  PASSWORD_PROTECTED
+}

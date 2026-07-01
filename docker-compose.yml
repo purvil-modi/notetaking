@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: secure-notes-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: purvilmodi
+      POSTGRES_DB: secure_notes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: secure-notes-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      DATABASE_URL: "postgresql://postgres:purvilmodi@postgres:5432/secure_notes?schema=public"
+      JWT_SECRET: "dev-jwt-secret-key-must-be-long-and-secure"
+      CORS_ORIGIN: "http://localhost:3000"
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: secure-notes-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: "http://localhost:5000/api"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
